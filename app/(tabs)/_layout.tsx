@@ -1,70 +1,48 @@
-import { SymbolView } from 'expo-symbols';
-import { Link, Tabs } from 'expo-router';
-import { Platform, Pressable } from 'react-native';
+import {
+    GlassTabBar,
+    GlassTabButton,
+    TabBarMinimizeProvider,
+    renderFadingTabScreen,
+    type GlassTabItem,
+} from "expo-glass-tabs";
+import { useRouter } from "expo-router";
+import { TabList, TabSlot, TabTrigger, Tabs } from "expo-router/ui";
 
-import Colors from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
-import { useClientOnlyValue } from '@/components/useClientOnlyValue';
+const ITEMS: (GlassTabItem & { href: string })[] = [
+  { name: "index", href: "/", label: "Quotes", icon: "quote.opening" },
+  { name: "explore", href: "/explore", label: "Explore", icon: "safari.fill" },
+  {
+    name: "profile",
+    href: "/profile",
+    label: "Settings",
+    icon: "gearshape.fill",
+  },
+];
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const router = useRouter();
 
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme].tint,
-        // Disable the static render of the header on web
-        // to prevent a hydration error in React Navigation v6.
-        headerShown: useClientOnlyValue(false, true),
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Tab One',
-          tabBarIcon: ({ color }) => (
-            <SymbolView
-              name={{
-                ios: 'chevron.left.forwardslash.chevron.right',
-                android: 'code',
-                web: 'code',
-              }}
-              tintColor={color}
-              size={28}
-            />
-          ),
-          headerRight: () => (
-            <Link href="/modal" asChild>
-              <Pressable style={{ marginRight: 15 }}>
-                {({ pressed }) => (
-                  <SymbolView
-                    name={{ ios: 'info.circle', android: 'info', web: 'info' }}
-                    size={25}
-                    tintColor={Colors[colorScheme].text}
-                    style={{ opacity: pressed ? 0.5 : 1 }}
-                  />
-                )}
-              </Pressable>
-            </Link>
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="two"
-        options={{
-          title: 'Tab Two',
-          tabBarIcon: ({ color }) => (
-            <SymbolView
-              name={{
-                ios: 'chevron.left.forwardslash.chevron.right',
-                android: 'code',
-                web: 'code',
-              }}
-              tintColor={color}
-              size={28}
-            />
-          ),
-        }}
-      />
-    </Tabs>
+    <TabBarMinimizeProvider>
+      <Tabs>
+        <TabSlot style={{ height: "100%" }} renderFn={renderFadingTabScreen} />
+        <TabList asChild>
+          <GlassTabBar
+            onIndexSelected={(i) => router.navigate(ITEMS[i].href as never)}
+          >
+            {ITEMS.map(({ href, ...item }, index) => (
+              <TabTrigger
+                key={item.name}
+                name={item.name}
+                href={href as never}
+                asChild
+              >
+                <GlassTabButton item={item} index={index} />
+              </TabTrigger>
+            ))}
+          </GlassTabBar>
+        </TabList>
+      </Tabs>
+    </TabBarMinimizeProvider>
   );
 }

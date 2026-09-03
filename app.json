@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "glass-tabs-app2",
-    "slug": "glass-tabs-app2",
+    "name": "Thrive",
+    "slug": "thrive",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "glasstabsapp2",
+    "scheme": "thrive",
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true

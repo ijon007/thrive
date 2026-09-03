@@ -1,56 +1,90 @@
-import { useFonts } from 'expo-font';
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
+import { useFonts } from "expo-font";
+import {
+    DarkTheme,
+    DefaultTheme,
+    ThemeProvider as NavThemeProvider,
+    Stack,
+} from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+import { StatusBar } from "expo-status-bar";
+import { useEffect } from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import "react-native-reanimated";
+import "../global.css";
 
-import { useColorScheme } from '@/components/useColorScheme';
+import { colors } from "@/constants/theme";
+import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
 
-export {
-  // Catch any errors thrown by the Layout component.
-  ErrorBoundary,
-} from 'expo-router';
+export { ErrorBoundary } from "expo-router";
 
 export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: '(tabs)',
+  initialRouteName: "(tabs)",
 };
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
+
+const LightNavTheme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    background: colors.light.background,
+    card: colors.light.card,
+    text: colors.light.foreground,
+    border: colors.light.border,
+    primary: colors.light.primary,
+  },
+};
+
+const DarkNavTheme = {
+  ...DarkTheme,
+  colors: {
+    ...DarkTheme.colors,
+    background: colors.dark.background,
+    card: colors.dark.card,
+    text: colors.dark.foreground,
+    border: colors.dark.border,
+    primary: colors.dark.primary,
+  },
+};
+
+function InnerLayout() {
+  const { scheme } = useTheme();
+
+  return (
+    <NavThemeProvider value={scheme === "dark" ? DarkNavTheme : LightNavTheme}>
+      <StatusBar style={scheme === "dark" ? "light" : "dark"} />
+      <Stack>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="modal" options={{ presentation: "modal" }} />
+      </Stack>
+    </NavThemeProvider>
+  );
+}
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    Lora: require("../assets/fonts/Lora-Regular.ttf"),
+    LoraBold: require("../assets/fonts/Lora-Bold.ttf"),
+    DMSans: require("../assets/fonts/DMSans-Regular.ttf"),
+    DMSansBold: require("../assets/fonts/DMSans-Bold.ttf"),
+    SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
 
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
     if (error) throw error;
   }, [error]);
 
   useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
+    if (loaded) SplashScreen.hideAsync();
   }, [loaded]);
 
-  if (!loaded) {
-    return null;
-  }
-
-  return <RootLayoutNav />;
-}
-
-function RootLayoutNav() {
-  const colorScheme = useColorScheme();
+  if (!loaded) return null;
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-      </Stack>
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider>
+        <InnerLayout />
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }

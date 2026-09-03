@@ -1,0 +1,44 @@
+@import 'tailwindcss';
+@import 'uniwind';
+
+@theme {
+  --font-serif: 'Lora';
+  --font-serif-bold: 'LoraBold';
+  --font-sans: 'DMSans';
+  --font-sans-bold: 'DMSansBold';
+  --font-mono: 'SpaceMono';
+}
+
+@layer theme {
+  :root {
+    @variant light {
+      --color-background: #F8F7F4;
+      --color-foreground: #1A1A1A;
+      --color-card: #FFFFFF;
+      --color-primary: #1A1A1A;
+      --color-primary-foreground: #FFFFFF;
+      --color-secondary: #F0EDE8;
+      --color-secondary-foreground: #6B6B6B;
+      --color-muted-foreground: #999999;
+      --color-icon-default: #BBBBBB;
+      --color-quote-border: rgba(0, 0, 0, 0.06);
+      --color-separator: rgba(0, 0, 0, 0.06);
+      --color-destructive: #E5484D;
+    }
+
+    @variant dark {
+      --color-background: #0A0A0A;
+      --color-foreground: #ECECEC;
+      --color-card: #161616;
+      --color-primary: #ECECEC;
+      --color-primary-foreground: #0A0A0A;
+      --color-secondary: #1C1C1C;
+      --color-secondary-foreground: #999999;
+      --color-muted-foreground: #777777;
+      --color-icon-default: #555555;
+      --color-quote-border: rgba(255, 255, 255, 0.06);
+      --color-separator: rgba(255, 255, 255, 0.06);
+      --color-destructive: #E5484D;
+    }
+  }
+}
