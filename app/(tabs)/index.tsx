@@ -1,7 +1,7 @@
 import { GlassView } from "expo-glass-effect";
 import { useMinimizeOnScroll } from "expo-glass-tabs";
 import { SymbolView } from "expo-symbols";
-import { useCallback, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Pressable, Text, View, type ViewToken } from "react-native";
 import Animated, {
   FadeIn,
@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AnimatedView, hasLiquidGlass } from "@/components/styled";
 import { QUOTES, type Quote } from "@/constants/quotes";
 import { colors, fonts } from "@/constants/theme";
+import { useSavedQuotes } from "@/contexts/SavedQuotesContext";
 import { useTheme } from "@/contexts/ThemeContext";
 
 const GAP = 12;
@@ -26,7 +27,7 @@ export default function HomeScreen() {
   const t = colors[scheme];
 
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [saved, setSaved] = useState<Set<string>>(new Set());
+  const { savedIds, toggleSave } = useSavedQuotes();
   const [pageH, setPageH] = useState(0);
 
   const onViewableItemsChanged = useRef(
@@ -35,15 +36,6 @@ export default function HomeScreen() {
       if (i != null) setCurrentIndex(i);
     },
   ).current;
-
-  const toggleSave = useCallback((id: string) => {
-    setSaved((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }, []);
 
   return (
     <View className="flex-1" style={{ flex: 1, backgroundColor: t.background }}>
@@ -108,7 +100,7 @@ export default function HomeScreen() {
                     <QuoteCard
                       quote={item}
                       scheme={scheme}
-                      saved={saved.has(item.id)}
+                      saved={savedIds.has(item.id)}
                       onToggleSave={() => toggleSave(item.id)}
                     />
                   </View>

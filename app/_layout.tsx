@@ -12,7 +12,8 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 import "../global.css";
 
-import { colors } from "@/constants/theme";
+import { colors, fonts } from "@/constants/theme";
+import { SavedQuotesProvider } from "@/contexts/SavedQuotesContext";
 import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
 
 export { ErrorBoundary } from "expo-router";
@@ -53,8 +54,20 @@ function InnerLayout() {
   return (
     <NavThemeProvider value={scheme === "dark" ? DarkNavTheme : LightNavTheme}>
       <StatusBar style={scheme === "dark" ? "light" : "dark"} />
-      <Stack>
+      <Stack
+        screenOptions={{
+          headerStyle: { backgroundColor: colors[scheme].background },
+          headerTintColor: colors[scheme].foreground,
+          headerShadowVisible: false,
+          headerTitleStyle: {
+            fontFamily: fonts.sansBold,
+            color: colors[scheme].foreground,
+          },
+          contentStyle: { backgroundColor: colors[scheme].background },
+        }}
+      >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="saved" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: "modal" }} />
       </Stack>
     </NavThemeProvider>
@@ -83,7 +96,9 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider>
-        <InnerLayout />
+        <SavedQuotesProvider>
+          <InnerLayout />
+        </SavedQuotesProvider>
       </ThemeProvider>
     </GestureHandlerRootView>
   );

@@ -1,0 +1,94 @@
+import { useMinimizeOnScroll } from "expo-glass-tabs";
+import { router } from "expo-router";
+import { SymbolView } from "expo-symbols";
+import { useState } from "react";
+import { Pressable, Text, View } from "react-native";
+import { FadeIn } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import { QuoteDialog, QuoteTile, TILE_GAP } from "@/components/QuoteGrid";
+import { AnimatedScrollView, AnimatedView } from "@/components/styled";
+import { QUOTES, type Quote } from "@/constants/quotes";
+import { colors, fonts } from "@/constants/theme";
+import { useSavedQuotes } from "@/contexts/SavedQuotesContext";
+import { useTheme } from "@/contexts/ThemeContext";
+
+export default function SavedQuotesScreen() {
+  const onScroll = useMinimizeOnScroll();
+  const insets = useSafeAreaInsets();
+  const { scheme } = useTheme();
+  const t = colors[scheme];
+  const { savedIds } = useSavedQuotes();
+  const [openQuote, setOpenQuote] = useState<Quote | null>(null);
+
+  const saved = QUOTES.filter((q) => savedIds.has(q.id));
+
+  return (
+    <>
+      <AnimatedScrollView
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingHorizontal: 16,
+          gap: 10,
+          paddingTop: insets.top + 8,
+          paddingBottom: 32,
+        }}
+        style={{ flex: 1, backgroundColor: t.background }}
+      >
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={12}
+          style={{ alignSelf: "flex-start", paddingVertical: 4 }}
+        >
+          <SymbolView name="chevron.left" size={18} tintColor={t.foreground} />
+        </Pressable>
+        <AnimatedView entering={FadeIn.duration(500)}>
+          <Text
+            className="text-[32px] font-bold tracking-tight"
+            style={{ color: t.foreground, fontFamily: fonts.serifBold }}
+          >
+            Saved Quotes
+          </Text>
+        </AnimatedView>
+
+        {saved.length === 0 ? (
+          <Text
+            style={{
+              color: t.mutedForeground,
+              fontFamily: fonts.sans,
+              fontSize: 15,
+              marginTop: 12,
+            }}
+          >
+            Quotes you like will show up here.
+          </Text>
+        ) : (
+          <View
+            style={{
+              flexDirection: "row",
+              flexWrap: "wrap",
+              gap: TILE_GAP,
+              marginTop: 2,
+            }}
+          >
+            {saved.map((quote) => (
+              <QuoteTile
+                key={quote.id}
+                quote={quote}
+                scheme={scheme}
+                onPress={() => setOpenQuote(quote)}
+              />
+            ))}
+          </View>
+        )}
+      </AnimatedScrollView>
+      <QuoteDialog
+        quote={openQuote}
+        scheme={scheme}
+        onClose={() => setOpenQuote(null)}
+      />
+    </>
+  );
+}

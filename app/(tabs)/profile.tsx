@@ -1,40 +1,48 @@
-import { GlassContainer, GlassView } from "expo-glass-effect";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Host, Switch } from "@expo/ui";
+import { GlassView } from "expo-glass-effect";
 import { useMinimizeOnScroll } from "expo-glass-tabs";
+import { router } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { Pressable, Text, View } from "react-native";
+import { useEffect, useState, type ReactNode } from "react";
+import { Platform, Pressable, Switch as RNSwitch, Text, View } from "react-native";
 import { FadeIn } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AnimatedScrollView, AnimatedView, hasLiquidGlass } from "@/components/styled";
+import { QUOTES } from "@/constants/quotes";
 import { colors, fonts } from "@/constants/theme";
-import { useTheme, type ThemeMode } from "@/contexts/ThemeContext";
+import { useSavedQuotes } from "@/contexts/SavedQuotesContext";
+import { useTheme } from "@/contexts/ThemeContext";
 
-const THEME_OPTIONS: { value: ThemeMode; label: string; icon: string }[] = [
-  { value: "light", label: "Light", icon: "sun.max.fill" },
-  { value: "dark", label: "Dark", icon: "moon.fill" },
-  { value: "system", label: "System", icon: "gear" },
-];
-
-const MENU_ITEMS = [
-  { label: "Saved Quotes", icon: "heart.fill", badge: "12" },
-  { label: "Notifications", icon: "bell.fill", badge: null },
-  { label: "Share App", icon: "square.and.arrow.up", badge: null },
-  { label: "Rate Us", icon: "star.fill", badge: null },
-  { label: "About", icon: "info.circle.fill", badge: null },
-];
-
-const CHIP_H = 36;
-const CHIP_R = CHIP_H / 2;
+const NOTIF_KEY = "quotes_notifications";
 const CARD_R = 18;
+const SELECT_BLUE = "#007AFF";
 
 export default function SettingsScreen() {
   const onScroll = useMinimizeOnScroll();
   const insets = useSafeAreaInsets();
   const { scheme, mode, setMode } = useTheme();
   const t = colors[scheme];
+  const { savedIds } = useSavedQuotes();
+  const [notifications, setNotifications] = useState(true);
+
+  useEffect(() => {
+    AsyncStorage.getItem(NOTIF_KEY).then((v) => {
+      if (v === "0") setNotifications(false);
+      if (v === "1") setNotifications(true);
+    });
+  }, []);
+
+  const onNotifications = (value: boolean) => {
+    setNotifications(value);
+    AsyncStorage.setItem(NOTIF_KEY, value ? "1" : "0");
+  };
+
+  const selectedPreview: "light" | "dark" =
+    mode === "light" || mode === "dark" ? mode : scheme;
 
   return (
-    <>
     <AnimatedScrollView
       onScroll={onScroll}
       scrollEventThrottle={16}
@@ -58,29 +66,48 @@ export default function SettingsScreen() {
       </AnimatedView>
 
       <Text
-        className="text-xs font-semibold tracking-widest"
         style={{
           color: t.mutedForeground,
-          fontFamily: fonts.sansBold,
+          fontFamily: fonts.sans,
+          fontSize: 13,
           marginTop: 6,
+          marginLeft: 4,
         }}
       >
-        APPEARANCE
+        Appearance
       </Text>
-      <GlassContainer
-        spacing={8}
-        style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
+      <GlassView
+        colorScheme={scheme}
+        glassEffectStyle="regular"
+        {...{ borderRadius: CARD_R }}
+        style={{
+          borderRadius: CARD_R,
+          borderCurve: "continuous",
+          ...(hasLiquidGlass
+            ? {}
+            : { backgroundColor: t.card, borderWidth: 1, borderColor: t.border }),
+        }}
       >
-        {THEME_OPTIONS.map((option) => (
-          <ThemeChip
-            key={option.value}
-            option={option}
-            active={mode === option.value}
-            scheme={scheme}
-            onPress={() => setMode(option.value)}
-          />
-        ))}
-      </GlassContainer>
+        <View
+          style={{
+            flexDirection: "row",
+            paddingHorizontal: 20,
+            paddingTop: 22,
+            paddingBottom: 18,
+          }}
+        >
+          {(["light", "dark"] as const).map((preview) => (
+            <ThemeOption
+              key={preview}
+              preview={preview}
+              selected={selectedPreview === preview}
+              labelColor={t.foreground}
+              mutedColor={t.mutedForeground}
+              onPress={() => setMode(preview)}
+            />
+          ))}
+        </View>
+      </GlassView>
 
       <GlassView
         colorScheme={scheme}
@@ -125,14 +152,15 @@ export default function SettingsScreen() {
       </GlassView>
 
       <Text
-        className="text-xs font-semibold tracking-widest"
         style={{
           color: t.mutedForeground,
-          fontFamily: fonts.sansBold,
+          fontFamily: fonts.sans,
+          fontSize: 13,
           marginTop: 6,
+          marginLeft: 4,
         }}
       >
-        GENERAL
+        General
       </Text>
       <GlassView
         colorScheme={scheme}
@@ -147,14 +175,39 @@ export default function SettingsScreen() {
             : { backgroundColor: t.card, borderWidth: 1, borderColor: t.border }),
         }}
       >
-        {MENU_ITEMS.map((item, i) => (
-          <MenuItem
-            key={item.label}
-            item={item}
-            scheme={scheme}
-            isLast={i === MENU_ITEMS.length - 1}
-          />
-        ))}
+        <MenuRow
+          label="Saved Quotes"
+          icon="heart.fill"
+          scheme={scheme}
+          badge={savedIds.size > 0 ? String(savedIds.size) : undefined}
+          onPress={() => router.push("/saved")}
+        />
+        <MenuRow
+          label="Notifications"
+          icon="bell.fill"
+          scheme={scheme}
+          isLast={false}
+          trailing={
+            <LgSwitch
+              value={notifications}
+              onValueChange={onNotifications}
+              scheme={scheme}
+            />
+          }
+        />
+        <MenuRow
+          label="Share App"
+          icon="square.and.arrow.up"
+          scheme={scheme}
+          onPress={() => {}}
+        />
+        <MenuRow
+          label="Rate Us"
+          icon="star.fill"
+          scheme={scheme}
+          isLast
+          onPress={() => {}}
+        />
       </GlassView>
 
       <View style={{ alignItems: "center", gap: 2, marginTop: 8 }}>
@@ -179,85 +232,215 @@ export default function SettingsScreen() {
         </Text>
       </View>
     </AnimatedScrollView>
-    </>
   );
 }
 
-function ThemeChip({
-  option,
-  active,
-  scheme,
+function ThemeOption({
+  preview,
+  selected,
+  labelColor,
+  mutedColor,
   onPress,
 }: {
-  option: (typeof THEME_OPTIONS)[number];
-  active: boolean;
-  scheme: "light" | "dark";
+  preview: "light" | "dark";
+  selected: boolean;
+  labelColor: string;
+  mutedColor: string;
   onPress: () => void;
 }) {
-  const t = colors[scheme];
-
   return (
-    <GlassView
-      isInteractive
-      colorScheme={scheme}
-      glassEffectStyle={active ? "clear" : "regular"}
-      {...{ borderRadius: CHIP_R }}
-      style={{
-        flex: 1,
-        height: CHIP_H,
-        borderRadius: CHIP_R,
-        borderCurve: "continuous",
-        ...(hasLiquidGlass
-          ? {}
-          : {
-              backgroundColor: active ? t.secondary : t.card,
-              borderWidth: 1,
-              borderColor: active ? t.primary : t.border,
-            }),
-      }}
-    >
-      <Pressable
-        onPress={onPress}
+    <Pressable onPress={onPress} style={{ flex: 1, alignItems: "center", gap: 10 }}>
+      <MiniQuotesPhone preview={preview} />
+      <Text
         style={{
-          height: CHIP_H,
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 6,
+          color: labelColor,
+          fontFamily: fonts.sans,
+          fontSize: 13,
         }}
       >
-        <SymbolView
-          name={option.icon as any}
-          size={14}
-          tintColor={active ? t.primary : t.mutedForeground}
-        />
-        <Text
-          className="text-[13px] font-medium"
-          style={{
-            color: active ? t.primary : t.mutedForeground,
-            fontFamily: active ? fonts.sansBold : fonts.sans,
-          }}
-        >
-          {option.label}
-        </Text>
-      </Pressable>
-    </GlassView>
+        {preview === "light" ? "Light" : "Dark"}
+      </Text>
+      <View
+        style={{
+          width: 22,
+          height: 22,
+          borderRadius: 11,
+          borderWidth: selected ? 0 : 1.5,
+          borderColor: mutedColor,
+          backgroundColor: selected ? SELECT_BLUE : "transparent",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        {selected ? (
+          <SymbolView name="checkmark" size={11} tintColor="#FFFFFF" />
+        ) : null}
+      </View>
+    </Pressable>
   );
 }
 
-function MenuItem({
-  item,
-  scheme,
-  isLast,
+function MiniQuotesPhone({
+  preview,
 }: {
-  item: (typeof MENU_ITEMS)[number];
+  preview: "light" | "dark";
+}) {
+  const t = colors[preview];
+  const quote = QUOTES[0];
+  return (
+    <View
+      style={{
+        width: 92,
+        height: 168,
+        borderRadius: 22,
+        borderCurve: "continuous",
+        backgroundColor: t.background,
+        borderWidth: 1.5,
+        borderColor: preview === "dark" ? "#3A3A3C" : "#C7C7CC",
+        overflow: "hidden",
+        paddingHorizontal: 6,
+        paddingTop: 8,
+        paddingBottom: 6,
+      }}
+    >
+      <Text
+        numberOfLines={1}
+        style={{
+          color: t.foreground,
+          fontFamily: fonts.serifBold,
+          fontSize: 8,
+          letterSpacing: -0.2,
+        }}
+      >
+        Thrive
+      </Text>
+      <Text
+        numberOfLines={1}
+        style={{
+          color: t.mutedForeground,
+          fontFamily: fonts.sans,
+          fontSize: 5,
+          marginTop: 1,
+          marginBottom: 5,
+        }}
+      >
+        Daily quotes · 1 / {QUOTES.length}
+      </Text>
+      <View
+        style={{
+          flex: 1,
+          flexDirection: "row",
+          borderRadius: 10,
+          borderCurve: "continuous",
+          backgroundColor: t.card,
+          paddingVertical: 6,
+          paddingLeft: 6,
+          paddingRight: 3,
+          borderWidth: 1,
+          borderColor: t.quoteBorder,
+        }}
+      >
+        <View style={{ flex: 1, justifyContent: "center", gap: 3, paddingRight: 2 }}>
+          <SymbolView
+            name="quote.opening"
+            size={8}
+            tintColor={t.mutedForeground}
+            style={{ opacity: 0.45 }}
+          />
+          <Text
+            numberOfLines={4}
+            style={{
+              color: t.foreground,
+              fontFamily: fonts.serif,
+              fontSize: 6,
+              lineHeight: 8,
+            }}
+          >
+            {quote?.text}
+          </Text>
+          <Text
+            numberOfLines={1}
+            style={{
+              color: t.mutedForeground,
+              fontFamily: fonts.sans,
+              fontSize: 5,
+            }}
+          >
+            — {quote?.author}
+          </Text>
+        </View>
+        <View style={{ width: 10, alignItems: "center", justifyContent: "flex-end", gap: 6, paddingBottom: 2 }}>
+          <View style={{ width: 5, height: 5, borderRadius: 2.5, backgroundColor: "#E5484D" }} />
+          <View style={{ width: 5, height: 5, borderRadius: 2.5, backgroundColor: t.iconDefault }} />
+          <View style={{ width: 5, height: 5, borderRadius: 2.5, backgroundColor: t.iconDefault }} />
+        </View>
+      </View>
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-around",
+          paddingTop: 5,
+        }}
+      >
+        {(["quote.opening", "safari.fill", "gearshape.fill"] as const).map((icon, i) => (
+          <SymbolView
+            key={icon}
+            name={icon}
+            size={7}
+            tintColor={i === 0 ? t.foreground : t.iconDefault}
+          />
+        ))}
+      </View>
+    </View>
+  );
+}
+
+function LgSwitch({
+  value,
+  onValueChange,
+  scheme,
+}: {
+  value: boolean;
+  onValueChange: (v: boolean) => void;
   scheme: "light" | "dark";
-  isLast: boolean;
+}) {
+  if (Platform.OS === "ios") {
+    return (
+          <Host matchContents colorScheme={scheme} seedColor={SELECT_BLUE}>
+        <Switch value={value} onValueChange={onValueChange} />
+      </Host>
+    );
+  }
+  return (
+    <RNSwitch
+      value={value}
+      onValueChange={onValueChange}
+      trackColor={{ true: SELECT_BLUE }}
+    />
+  );
+}
+
+function MenuRow({
+  label,
+  icon,
+  scheme,
+  badge,
+  trailing,
+  isLast = false,
+  onPress,
+}: {
+  label: string;
+  icon: string;
+  scheme: "light" | "dark";
+  badge?: string;
+  trailing?: ReactNode;
+  isLast?: boolean;
+  onPress?: () => void;
 }) {
   const t = colors[scheme];
 
   return (
-    <Pressable>
+    <Pressable onPress={onPress}>
       <View
         style={{
           flexDirection: "row",
@@ -272,7 +455,7 @@ function MenuItem({
       >
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
           <SymbolView
-            name={item.icon as any}
+            name={icon as "heart.fill"}
             size={16}
             tintColor={t.mutedForeground}
           />
@@ -283,11 +466,11 @@ function MenuItem({
               fontSize: 16,
             }}
           >
-            {item.label}
+            {label}
           </Text>
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          {item.badge ? (
+          {badge ? (
             <View
               style={{
                 paddingHorizontal: 8,
@@ -304,15 +487,17 @@ function MenuItem({
                   fontWeight: "600",
                 }}
               >
-                {item.badge}
+                {badge}
               </Text>
             </View>
           ) : null}
-          <SymbolView
-            name="chevron.right"
-            size={14}
-            tintColor={t.mutedForeground}
-          />
+          {trailing ?? (
+            <SymbolView
+              name="chevron.right"
+              size={14}
+              tintColor={t.mutedForeground}
+            />
+          )}
         </View>
       </View>
     </Pressable>
