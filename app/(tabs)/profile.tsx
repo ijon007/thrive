@@ -47,7 +47,7 @@ export default function SettingsScreen() {
         paddingHorizontal: 20,
         gap: 20,
         paddingTop: insets.top + 16,
-        paddingBottom: insets.bottom + 120,
+        paddingBottom: 32,
       }}
       style={{ backgroundColor: t.background }}
     >
@@ -69,7 +69,10 @@ export default function SettingsScreen() {
         >
           APPEARANCE
         </Text>
-        <StyledGlassView className="rounded-2xl p-1.5" glassEffectStyle="regular">
+        <StyledGlassView
+          className="rounded-2xl p-1.5"
+          glassEffectStyle="regular"
+        >
           <View className="flex-row gap-1.5">
             {THEME_OPTIONS.map((option) => (
               <ThemeOption

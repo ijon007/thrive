@@ -16,7 +16,6 @@ import { colors, fonts } from "@/constants/theme";
 import { useTheme } from "@/contexts/ThemeContext";
 
 const GAP = 8;
-const TAB_PILL = 58;
 
 export default function HomeScreen() {
   const onScroll = useMinimizeOnScroll();
@@ -28,7 +27,8 @@ export default function HomeScreen() {
   const [saved, setSaved] = useState<Set<string>>(new Set());
   const [pageH, setPageH] = useState(0);
 
-  const tabClearance = Math.max(insets.bottom - 16, 12) + TAB_PILL + GAP;
+  // Native tab bar is overlaid; keep the pager above it (paging + auto insets fight).
+  const tabClearance = insets.bottom + 56;
 
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {

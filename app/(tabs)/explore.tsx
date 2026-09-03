@@ -50,7 +50,7 @@ export default function ExploreScreen() {
         paddingHorizontal: 20,
         gap: 16,
         paddingTop: insets.top + 16,
-        paddingBottom: insets.bottom + 120,
+        paddingBottom: 32,
       }}
       style={{ backgroundColor: t.background }}
     >
