@@ -21,7 +21,7 @@ export default function TabLayout() {
         <NativeTabs.Trigger.Icon sf="quote.opening" md="format_quote" />
         <NativeTabs.Trigger.Label>Quotes</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="explore">
+      <NativeTabs.Trigger name="explore" disableAutomaticContentInsets>
         <NativeTabs.Trigger.Icon sf="safari.fill" md="travel_explore" />
         <NativeTabs.Trigger.Label>Explore</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
