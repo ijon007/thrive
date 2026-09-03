@@ -1,17 +1,12 @@
 import { useMinimizeOnScroll } from "expo-glass-tabs";
 import { SymbolView } from "expo-symbols";
-import { useCallback, useLayoutEffect, useState } from "react";
-import { Dimensions, Pressable, Text, View } from "react-native";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import {
-    Easing,
+import { useCallback, useRef, useState } from "react";
+import { Pressable, Text, View, type ViewToken } from "react-native";
+import Animated, {
     FadeIn,
-    interpolate,
-    runOnJS,
     useAnimatedStyle,
     useSharedValue,
     withSpring,
-    withTiming,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -20,108 +15,43 @@ import { QUOTES, type Quote } from "@/constants/quotes";
 import { colors, fonts } from "@/constants/theme";
 import { useTheme } from "@/contexts/ThemeContext";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.25;
-const SWIPE_MS = 200;
-const SWIPE_EASE = Easing.out(Easing.cubic);
+const GAP = 8;
+const TAB_PILL = 58;
 
 export default function HomeScreen() {
-  useMinimizeOnScroll(); // ponytail: keep tab-bar hook alive even without a scroll view
+  const onScroll = useMinimizeOnScroll();
   const insets = useSafeAreaInsets();
   const { scheme } = useTheme();
   const t = colors[scheme];
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [saved, setSaved] = useState<Set<string>>(new Set());
+  const [pageH, setPageH] = useState(0);
 
-  const translateX = useSharedValue(0);
+  const tabClearance = Math.max(insets.bottom - 16, 12) + TAB_PILL + GAP;
 
-  const n = QUOTES.length;
-  const quote = QUOTES[currentIndex];
-  const prevQuote = QUOTES[(currentIndex - 1 + n) % n];
-  const nextQuote = QUOTES[(currentIndex + 1) % n];
+  const onViewableItemsChanged = useRef(
+    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+      const i = viewableItems[0]?.index;
+      if (i != null) setCurrentIndex(i);
+    },
+  ).current;
 
-  const goNext = useCallback(() => {
-    setCurrentIndex((i) => (i + 1) % QUOTES.length);
-  }, []);
-
-  const goPrev = useCallback(() => {
-    setCurrentIndex((i) => (i - 1 + QUOTES.length) % QUOTES.length);
-  }, []);
-
-  // Reset after index commit so the incoming card (already at center) stays put — no snap-then-swap.
-  useLayoutEffect(() => {
-    translateX.value = 0;
-  }, [currentIndex, translateX]);
-
-  const panGesture = Gesture.Pan()
-    .activeOffsetX([-15, 15])
-    .onUpdate((e) => {
-      translateX.value = e.translationX;
-    })
-    .onEnd((e) => {
-      if (e.translationX < -SWIPE_THRESHOLD || e.velocityX < -500) {
-        translateX.value = withTiming(
-          -SCREEN_WIDTH,
-          { duration: SWIPE_MS, easing: SWIPE_EASE },
-          (finished) => {
-            if (finished) runOnJS(goNext)();
-          },
-        );
-      } else if (e.translationX > SWIPE_THRESHOLD || e.velocityX > 500) {
-        translateX.value = withTiming(
-          SCREEN_WIDTH,
-          { duration: SWIPE_MS, easing: SWIPE_EASE },
-          (finished) => {
-            if (finished) runOnJS(goPrev)();
-          },
-        );
-      } else {
-        translateX.value = withTiming(0, { duration: 160, easing: SWIPE_EASE });
-      }
-    });
-
-  const currentAnim = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: translateX.value },
-      {
-        rotateZ: `${interpolate(translateX.value, [-SCREEN_WIDTH, 0, SCREEN_WIDTH], [-6, 0, 6])}deg`,
-      },
-    ],
-  }));
-
-  const prevAnim = useAnimatedStyle(() => ({
-    transform: [{ translateX: translateX.value - SCREEN_WIDTH }],
-  }));
-
-  const nextAnim = useAnimatedStyle(() => ({
-    transform: [{ translateX: translateX.value + SCREEN_WIDTH }],
-  }));
-
-  const toggleSave = useCallback(() => {
+  const toggleSave = useCallback((id: string) => {
     setSaved((prev) => {
       const next = new Set(prev);
-      if (next.has(quote.id)) next.delete(quote.id);
-      else next.add(quote.id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
-  }, [quote.id]);
-
-  const isSaved = saved.has(quote.id);
-  const cardShell = {
-    backgroundColor: t.card,
-    borderColor: t.quoteBorder,
-  };
+  }, []);
 
   return (
-    <View
-      className="flex-1 bg-background"
-      style={{ flex: 1, backgroundColor: t.background }}
-    >
+    <View className="flex-1" style={{ flex: 1, backgroundColor: t.background }}>
       <AnimatedView
-        entering={FadeIn.duration(500).delay(100)}
-        className="px-5 pb-2 flex-row items-baseline justify-between"
-        style={{ paddingTop: insets.top + 8 }}
+        entering={FadeIn.duration(400)}
+        className="px-5 pb-1 flex-row items-baseline justify-between"
+        style={{ paddingTop: insets.top + 6 }}
       >
         <Text
           className="text-[22px] font-bold tracking-tight"
@@ -138,57 +68,53 @@ export default function HomeScreen() {
       </AnimatedView>
 
       <View
-        className="flex-1 mx-3 mt-1"
-        style={{ marginBottom: insets.bottom + 96, overflow: "hidden" }}
+        className="flex-1"
+        style={{ marginBottom: tabClearance }}
+        onLayout={(e) => setPageH(e.nativeEvent.layout.height)}
       >
-        <GestureDetector gesture={panGesture}>
-          <AnimatedView className="flex-1">
-            <AnimatedView
-              pointerEvents="none"
-              className="absolute inset-0 rounded-3xl border overflow-hidden flex-row"
-              style={[cardShell, prevAnim]}
-            >
-              <QuoteBody quote={prevQuote} scheme={scheme} />
-            </AnimatedView>
-            <AnimatedView
-              className="absolute inset-0 rounded-3xl border overflow-hidden flex-row"
-              style={[cardShell, currentAnim]}
-            >
-              <QuoteBody
-                quote={quote}
-                scheme={scheme}
-                saved={isSaved}
-                onToggleSave={toggleSave}
-              />
-            </AnimatedView>
-            <AnimatedView
-              pointerEvents="none"
-              className="absolute inset-0 rounded-3xl border overflow-hidden flex-row"
-              style={[cardShell, nextAnim]}
-            >
-              <QuoteBody quote={nextQuote} scheme={scheme} />
-            </AnimatedView>
-          </AnimatedView>
-        </GestureDetector>
+        {pageH > 0 && (
+          <Animated.FlatList
+            data={QUOTES}
+            keyExtractor={(q) => q.id}
+            pagingEnabled
+            decelerationRate="fast"
+            snapToInterval={pageH}
+            snapToAlignment="start"
+            disableIntervalMomentum
+            showsVerticalScrollIndicator={false}
+            getItemLayout={(_, i) => ({
+              length: pageH,
+              offset: pageH * i,
+              index: i,
+            })}
+            onScroll={onScroll}
+            scrollEventThrottle={16}
+            onViewableItemsChanged={onViewableItemsChanged}
+            viewabilityConfig={{ itemVisiblePercentThreshold: 60 }}
+            renderItem={({ item }) => (
+              <View
+                style={{
+                  height: pageH,
+                  paddingHorizontal: GAP,
+                  paddingVertical: GAP,
+                }}
+              >
+                <QuoteCard
+                  quote={item}
+                  scheme={scheme}
+                  saved={saved.has(item.id)}
+                  onToggleSave={() => toggleSave(item.id)}
+                />
+              </View>
+            )}
+          />
+        )}
       </View>
-
-      <AnimatedView
-        entering={FadeIn.duration(700).delay(900)}
-        className="absolute self-center"
-        style={{ bottom: insets.bottom + 104 }}
-      >
-        <Text
-          className="text-[11px] tracking-widest uppercase"
-          style={{ color: t.mutedForeground, fontFamily: fonts.sans }}
-        >
-          Swipe to browse
-        </Text>
-      </AnimatedView>
     </View>
   );
 }
 
-function QuoteBody({
+function QuoteCard({
   quote,
   scheme,
   saved,
@@ -196,12 +122,15 @@ function QuoteBody({
 }: {
   quote: Quote;
   scheme: "light" | "dark";
-  saved?: boolean;
-  onToggleSave?: () => void;
+  saved: boolean;
+  onToggleSave: () => void;
 }) {
   const t = colors[scheme];
   return (
-    <>
+    <View
+      className="flex-1 rounded-3xl border overflow-hidden flex-row"
+      style={{ backgroundColor: t.card, borderColor: t.quoteBorder }}
+    >
       <View className="flex-1 justify-center p-7 pr-3 gap-3.5">
         <Text
           className="text-[80px] font-bold leading-[80px] -mb-7"
@@ -227,10 +156,7 @@ function QuoteBody({
         >
           <Text
             className="text-xs font-semibold"
-            style={{
-              color: t.secondaryForeground,
-              fontFamily: fonts.sans,
-            }}
+            style={{ color: t.secondaryForeground, fontFamily: fonts.sans }}
           >
             {quote.category}
           </Text>
@@ -241,7 +167,7 @@ function QuoteBody({
           icon={saved ? "heart.fill" : "heart"}
           label={saved ? "Liked" : "Like"}
           color={saved ? "#E5484D" : t.iconDefault}
-          onPress={onToggleSave ?? (() => {})}
+          onPress={onToggleSave}
         />
         <SideButton
           icon="arrow.down.to.line"
@@ -256,7 +182,7 @@ function QuoteBody({
           onPress={() => {}}
         />
       </View>
-    </>
+    </View>
   );
 }
 
