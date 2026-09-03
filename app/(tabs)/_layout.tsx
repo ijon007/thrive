@@ -9,7 +9,7 @@ export default function TabLayout() {
 
   return (
     <NativeTabs
-      minimizeBehavior="onScrollDown"
+      minimizeBehavior="never"
       tintColor={t.iconActive}
       iconColor={{ default: t.iconDefault, selected: t.iconActive }}
       labelStyle={{
@@ -25,7 +25,7 @@ export default function TabLayout() {
         <NativeTabs.Trigger.Icon sf="safari.fill" md="travel_explore" />
         <NativeTabs.Trigger.Label>Explore</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="profile">
+      <NativeTabs.Trigger name="profile" disableAutomaticContentInsets>
         <NativeTabs.Trigger.Icon sf="gearshape.fill" md="settings" />
         <NativeTabs.Trigger.Label>Settings</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>

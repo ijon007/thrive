@@ -60,12 +60,6 @@ export default function ExploreScreen() {
         >
           Explore
         </Text>
-        <Text
-          className="text-[15px]"
-          style={{ color: t.mutedForeground, fontFamily: fonts.sans, marginTop: 2 }}
-        >
-          Browse quotes by category
-        </Text>
       </AnimatedView>
 
       <ScrollView
