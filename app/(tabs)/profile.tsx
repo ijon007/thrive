@@ -1,11 +1,10 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Host, Switch } from "@expo/ui";
 import { GlassView } from "expo-glass-effect";
 import { useMinimizeOnScroll } from "expo-glass-tabs";
 import { router } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useEffect, useState, type ReactNode } from "react";
-import { Platform, Pressable, Switch as RNSwitch, Text, View } from "react-native";
+import { Pressable, Switch as RNSwitch, Text, View } from "react-native";
 import { FadeIn } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -179,11 +178,7 @@ export default function SettingsScreen() {
           scheme={scheme}
           isLast={false}
           trailing={
-            <LgSwitch
-              value={notifications}
-              onValueChange={onNotifications}
-              scheme={scheme}
-            />
+            <LgSwitch value={notifications} onValueChange={onNotifications} />
           }
         />
         <MenuRow
@@ -367,19 +362,12 @@ function MiniQuotesPhone({
 function LgSwitch({
   value,
   onValueChange,
-  scheme,
 }: {
   value: boolean;
   onValueChange: (v: boolean) => void;
-  scheme: "light" | "dark";
 }) {
-  if (Platform.OS === "ios") {
-    return (
-          <Host matchContents colorScheme={scheme} seedColor={SELECT_BLUE}>
-        <Switch value={value} onValueChange={onValueChange} />
-      </Host>
-    );
-  }
+  // ponytail: @expo/ui Host+Switch sizes async (topLeading ZStack). Later rows
+  // in a ScrollView never get a correct Yoga pass. UISwitch lays out on first flex.
   return (
     <RNSwitch
       value={value}
@@ -415,7 +403,7 @@ function MenuRow({
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
-          paddingVertical: 14,
+          paddingVertical: 10,
           paddingHorizontal: 16,
           ...(!isLast
             ? { borderBottomWidth: 1, borderBottomColor: t.separator }
