@@ -6,7 +6,7 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import { FadeIn } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { QuoteDialog, QuoteTile, TILE_GAP } from "@/components/QuoteGrid";
+import { QuoteDialog, QuoteTile, TILE_GAP, type TileRect } from "@/components/QuoteGrid";
 import { AnimatedScrollView, AnimatedView, hasLiquidGlass } from "@/components/styled";
 import { CATEGORIES, QUOTES, type Quote } from "@/constants/quotes";
 import { colors, fonts } from "@/constants/theme";
@@ -32,6 +32,7 @@ export default function ExploreScreen() {
 
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [openQuote, setOpenQuote] = useState<Quote | null>(null);
+  const [openSource, setOpenSource] = useState<TileRect | null>(null);
 
   const filtered = activeCategory
     ? QUOTES.filter((q) => q.category === activeCategory)
@@ -102,15 +103,23 @@ export default function ExploreScreen() {
             key={quote.id}
             quote={quote}
             scheme={scheme}
-            onPress={() => setOpenQuote(quote)}
+            hidden={openQuote?.id === quote.id}
+            onPress={(layout) => {
+              setOpenSource(layout);
+              setOpenQuote(quote);
+            }}
           />
         ))}
       </View>
     </AnimatedScrollView>
     <QuoteDialog
       quote={openQuote}
+      source={openSource}
       scheme={scheme}
-      onClose={() => setOpenQuote(null)}
+      onClose={() => {
+        setOpenQuote(null);
+        setOpenSource(null);
+      }}
     />
     </>
   );

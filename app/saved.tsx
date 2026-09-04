@@ -6,7 +6,7 @@ import { Pressable, Text, View } from "react-native";
 import { FadeIn } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { QuoteDialog, QuoteTile, TILE_GAP } from "@/components/QuoteGrid";
+import { QuoteDialog, QuoteTile, TILE_GAP, type TileRect } from "@/components/QuoteGrid";
 import { AnimatedScrollView, AnimatedView } from "@/components/styled";
 import { QUOTES, type Quote } from "@/constants/quotes";
 import { colors, fonts } from "@/constants/theme";
@@ -20,6 +20,7 @@ export default function SavedQuotesScreen() {
   const t = colors[scheme];
   const { savedIds } = useSavedQuotes();
   const [openQuote, setOpenQuote] = useState<Quote | null>(null);
+  const [openSource, setOpenSource] = useState<TileRect | null>(null);
 
   const saved = QUOTES.filter((q) => savedIds.has(q.id));
 
@@ -78,7 +79,11 @@ export default function SavedQuotesScreen() {
                 key={quote.id}
                 quote={quote}
                 scheme={scheme}
-                onPress={() => setOpenQuote(quote)}
+                hidden={openQuote?.id === quote.id}
+                onPress={(layout) => {
+                  setOpenSource(layout);
+                  setOpenQuote(quote);
+                }}
               />
             ))}
           </View>
@@ -86,8 +91,12 @@ export default function SavedQuotesScreen() {
       </AnimatedScrollView>
       <QuoteDialog
         quote={openQuote}
+        source={openSource}
         scheme={scheme}
-        onClose={() => setOpenQuote(null)}
+        onClose={() => {
+          setOpenQuote(null);
+          setOpenSource(null);
+        }}
       />
     </>
   );
