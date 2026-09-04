@@ -6,6 +6,7 @@ import { Pressable, Text, View } from "react-native";
 import { FadeIn } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { GlassPad } from "@/components/GlassPad";
 import { QuoteDialog, QuoteTile, TILE_GAP, type TileRect } from "@/components/QuoteGrid";
 import { AnimatedScrollView, AnimatedView } from "@/components/styled";
 import { QUOTES, type Quote } from "@/constants/quotes";
@@ -38,13 +39,19 @@ export default function SavedQuotesScreen() {
         }}
         style={{ flex: 1, backgroundColor: t.background }}
       >
-        <Pressable
-          onPress={() => router.back()}
-          hitSlop={12}
-          style={{ alignSelf: "flex-start", paddingVertical: 4 }}
+        <GlassPad
+          scheme={scheme}
+          radius={22}
+          style={{ width: 44, height: 44, alignSelf: "flex-start" }}
         >
-          <SymbolView name="chevron.left" size={18} tintColor={t.foreground} />
-        </Pressable>
+          <Pressable
+            onPress={() => router.back()}
+            hitSlop={8}
+            style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+          >
+            <SymbolView name="chevron.left" size={17} tintColor={t.foreground} />
+          </Pressable>
+        </GlassPad>
         <AnimatedView entering={FadeIn.duration(500)}>
           <Text
             className="text-[32px] font-bold tracking-tight"

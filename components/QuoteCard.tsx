@@ -605,26 +605,23 @@ export function QuoteCard({
     </View>
   );
 
-  const inner = (
-    <>
-      {art}
-      {buttons}
-      {sheet ? editor : null}
-    </>
-  );
+  const frame = {
+    flex: 1,
+    width: "100%" as const,
+    borderRadius: CARD_R,
+    borderCurve: "continuous" as const,
+    overflow: "hidden" as const,
+  };
 
-  if (!themed && !custom) {
-    return (
+  // ponytail: nested GlassView eats sibling glass; keep dock/chrome outside the card effect
+  const surface =
+    !themed && !custom ? (
       <GlassView
         isInteractive
         colorScheme={scheme}
         glassEffectStyle="regular"
         style={{
-          flex: 1,
-          width: "100%",
-          borderRadius: CARD_R,
-          borderCurve: "continuous",
-          overflow: "hidden",
+          ...frame,
           ...(hasLiquidGlass
             ? {}
             : {
@@ -634,22 +631,20 @@ export function QuoteCard({
               }),
         }}
       >
-        {inner}
+        {art}
+        {buttons}
       </GlassView>
+    ) : (
+      <View style={frame}>
+        {art}
+        {buttons}
+      </View>
     );
-  }
 
   return (
-    <View
-      style={{
-        flex: 1,
-        width: "100%",
-        borderRadius: CARD_R,
-        borderCurve: "continuous",
-        overflow: "hidden",
-      }}
-    >
-      {inner}
+    <View style={{ flex: 1, width: "100%" }}>
+      {surface}
+      {sheet ? editor : null}
     </View>
   );
 }

@@ -1,7 +1,8 @@
 import { GlassView } from "expo-glass-effect";
 import { SymbolView } from "expo-symbols";
-import { useLayoutEffect, useRef } from "react";
-import { Modal, Pressable, Text, useWindowDimensions, View } from "react-native";
+import { useLayoutEffect, useRef, useState } from "react";
+import { Modal, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Animated, {
   Easing,
   Extrapolation,
@@ -13,14 +14,29 @@ import Animated, {
   withSpring,
   withTiming,
 } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { QuoteCard } from "@/components/QuoteCard";
 import { hasLiquidGlass } from "@/components/styled";
 import { type Quote } from "@/constants/quotes";
 import { colors, fonts } from "@/constants/theme";
 
 const TILE_R = 18;
-const DIALOG_R = 28;
+const DIALOG_R = 24;
 export const TILE_GAP = 8;
+const FEED_GAP = 12;
+
+/** Matches the quote card size on the home feed. */
+function feedCardSize(
+  winW: number,
+  winH: number,
+  insets: { top: number; bottom: number },
+) {
+  const width = winW - FEED_GAP * 2;
+  const height =
+    winH - insets.top - (8 + 32 + 4) - insets.bottom - FEED_GAP * 3;
+  return { width, height: Math.max(height, 280) };
+}
 
 const OPEN_SPRING = { duration: 480, dampingRatio: 0.86 } as const;
 const CLOSE_SPRING = { duration: 380, dampingRatio: 0.95 } as const;
@@ -138,67 +154,6 @@ function TileBody({
   );
 }
 
-function DialogBody({
-  quote,
-  scheme,
-}: {
-  quote: Quote;
-  scheme: "light" | "dark";
-}) {
-  const t = colors[scheme];
-
-  return (
-    <View style={{ padding: 28, gap: 16 }}>
-      <SymbolView
-        name="quote.opening"
-        size={26}
-        tintColor={t.mutedForeground}
-        style={{ opacity: 0.5 }}
-      />
-      <Text
-        style={{
-          color: t.foreground,
-          fontFamily: fonts.serif,
-          fontSize: 26,
-          lineHeight: 36,
-          letterSpacing: -0.3,
-        }}
-      >
-        {quote.text}
-      </Text>
-      <Text
-        style={{
-          color: t.mutedForeground,
-          fontFamily: fonts.sans,
-          fontSize: 15,
-        }}
-      >
-        — {quote.author}
-      </Text>
-      <View
-        style={{
-          alignSelf: "flex-start",
-          paddingHorizontal: 12,
-          paddingVertical: 6,
-          borderRadius: 999,
-          backgroundColor: t.secondary,
-        }}
-      >
-        <Text
-          style={{
-            color: t.secondaryForeground,
-            fontFamily: fonts.sans,
-            fontSize: 12,
-            fontWeight: "600",
-          }}
-        >
-          {quote.category}
-        </Text>
-      </View>
-    </View>
-  );
-}
-
 export function QuoteDialog({
   quote,
   source,
@@ -212,11 +167,12 @@ export function QuoteDialog({
 }) {
   const t = colors[scheme];
   const reduceMotion = useReducedMotion();
+  const insets = useSafeAreaInsets();
   const { width: winW, height: winH } = useWindowDimensions();
-  const destW = winW - 44;
+  const { width: destW, height: destH } = feedCardSize(winW, winH, insets);
+  const [editing, setEditing] = useState(false);
 
   const closingRef = useRef(false);
-  const openedRef = useRef(false);
 
   const progress = useSharedValue(0);
   const srcX = useSharedValue(0);
@@ -226,31 +182,39 @@ export function QuoteDialog({
   const dstX = useSharedValue(0);
   const dstY = useSharedValue(0);
   const dstW = useSharedValue(destW);
-  const dstH = useSharedValue(0);
+  const dstH = useSharedValue(destH);
 
   useLayoutEffect(() => {
-    if (!quote || !source) return;
+    if (!quote || !source) {
+      setEditing(false);
+      return;
+    }
     closingRef.current = false;
-    openedRef.current = false;
+    setEditing(false);
     srcX.value = source.x;
     srcY.value = source.y;
     srcW.value = source.width;
     srcH.value = source.height;
-    dstX.value = source.x;
-    dstY.value = source.y;
-    dstW.value = source.width;
-    dstH.value = source.height;
+    dstW.value = destW;
+    dstH.value = destH;
+    dstX.value = (winW - destW) / 2;
+    dstY.value = (winH - destH) / 2;
     progress.value = 0;
-  }, [quote, source, dstH, dstW, dstX, dstY, progress, srcH, srcW, srcX, srcY]);
+    if (reduceMotion) {
+      progress.value = withTiming(1, { duration: 180, easing: Easing.out(Easing.quad) });
+    } else {
+      progress.value = withSpring(1, OPEN_SPRING);
+    }
+  }, [quote, source, destH, destW, dstH, dstW, dstX, dstY, insets.bottom, insets.top, progress, reduceMotion, srcH, srcW, srcX, srcY, winH, winW]);
 
   const finishClose = () => {
     closingRef.current = false;
-    openedRef.current = false;
+    setEditing(false);
     onClose();
   };
 
   const requestClose = () => {
-    if (!quote || closingRef.current) return;
+    if (!quote || closingRef.current || editing) return;
     closingRef.current = true;
     if (reduceMotion) {
       progress.value = withTiming(0, { duration: 180, easing: Easing.out(Easing.quad) }, (finished) => {
@@ -261,22 +225,6 @@ export function QuoteDialog({
     progress.value = withSpring(0, CLOSE_SPRING, (finished) => {
       if (finished) runOnJS(finishClose)();
     });
-  };
-
-  const onDestLayout = (height: number) => {
-    if (!quote || !source || closingRef.current) return;
-    const h = Math.min(height, winH - 48);
-    dstW.value = destW;
-    dstH.value = h;
-    dstX.value = (winW - destW) / 2;
-    dstY.value = (winH - h) / 2;
-    if (openedRef.current) return;
-    openedRef.current = true;
-    if (reduceMotion) {
-      progress.value = withTiming(1, { duration: 180, easing: Easing.out(Easing.quad) });
-      return;
-    }
-    progress.value = withSpring(1, OPEN_SPRING);
   };
 
   const backdropStyle = useAnimatedStyle(() => ({
@@ -320,7 +268,7 @@ export function QuoteDialog({
       statusBarTranslucent
       onRequestClose={requestClose}
     >
-      <View style={{ flex: 1 }}>
+      <GestureHandlerRootView style={{ flex: 1 }}>
         <Animated.View
           style={[
             {
@@ -339,64 +287,53 @@ export function QuoteDialog({
         </Animated.View>
 
         {quote ? (
-          <>
-            <View
-              pointerEvents="none"
-              style={{ position: "absolute", width: destW, opacity: 0 }}
-              onLayout={(e) => onDestLayout(e.nativeEvent.layout.height)}
-            >
-              <DialogBody quote={quote} scheme={scheme} />
-            </View>
-
-            <Animated.View style={cardStyle}>
-              <GlassView
-                colorScheme={scheme}
-                glassEffectStyle="regular"
-                {...{ borderRadius: DIALOG_R }}
-                style={{
-                  flex: 1,
-                  borderRadius: DIALOG_R,
-                  borderCurve: "continuous",
-                  ...(hasLiquidGlass
-                    ? {}
-                    : {
-                        backgroundColor: t.card,
-                        borderWidth: 1,
-                        borderColor: t.border,
-                      }),
-                }}
+          <Animated.View style={cardStyle}>
+            {source ? (
+              <Animated.View
+                pointerEvents="none"
+                style={[
+                  {
+                    position: "absolute",
+                    width: source.width,
+                    height: source.height,
+                  },
+                  tileContentStyle,
+                ]}
               >
-                <View style={{ flex: 1 }}>
-                  {source ? (
-                    <Animated.View
-                      pointerEvents="none"
-                      style={[
-                        {
-                          position: "absolute",
-                          width: source.width,
-                          height: source.height,
-                        },
-                        tileContentStyle,
-                      ]}
-                    >
-                      <TileBody quote={quote} scheme={scheme} />
-                    </Animated.View>
-                  ) : null}
-                  <Animated.View
-                    pointerEvents="none"
-                    style={[
-                      { position: "absolute", width: destW },
-                      dialogContentStyle,
-                    ]}
-                  >
-                    <DialogBody quote={quote} scheme={scheme} />
-                  </Animated.View>
-                </View>
-              </GlassView>
+                <GlassView
+                  colorScheme={scheme}
+                  glassEffectStyle="regular"
+                  {...{ borderRadius: TILE_R }}
+                  style={{
+                    flex: 1,
+                    borderRadius: TILE_R,
+                    borderCurve: "continuous",
+                    ...(hasLiquidGlass
+                      ? {}
+                      : {
+                          backgroundColor: t.card,
+                          borderWidth: 1,
+                          borderColor: t.border,
+                        }),
+                  }}
+                >
+                  <TileBody quote={quote} scheme={scheme} />
+                </GlassView>
+              </Animated.View>
+            ) : null}
+            <Animated.View
+              pointerEvents="auto"
+              style={[StyleSheet.absoluteFill, dialogContentStyle]}
+            >
+              <QuoteCard
+                quote={quote}
+                editing={editing}
+                onEditingChange={setEditing}
+              />
             </Animated.View>
-          </>
+          </Animated.View>
         ) : null}
-      </View>
+      </GestureHandlerRootView>
     </Modal>
   );
 }
