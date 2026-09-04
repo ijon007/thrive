@@ -54,7 +54,8 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { CUSTOM_PHOTO_LOOK } from "@/lib/quotePhoto";
 import { saveImageToCameraRoll, shareImageFile } from "@/lib/shareQuote";
 
-const CARD_R = 24;
+// ponytail: CARD_R = DOCK_R (28) + dock inset (12) for concentric corners
+const CARD_R = 40;
 const PAD = 24;
 const EDIT_TOP = 68;
 const OPEN_SPRING = { duration: 360, dampingRatio: 1 } as const;

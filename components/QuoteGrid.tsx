@@ -22,7 +22,7 @@ import { type Quote } from "@/constants/quotes";
 import { colors, fonts } from "@/constants/theme";
 
 const TILE_R = 18;
-const DIALOG_R = 24;
+const DIALOG_R = 40;
 export const TILE_GAP = 8;
 const FEED_GAP = 12;
 
