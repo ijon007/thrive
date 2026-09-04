@@ -5,6 +5,17 @@ export interface Quote {
   category: string;
 }
 
+export const CATEGORIES = [
+  "Wisdom",
+  "Love",
+  "Courage",
+  "Mindfulness",
+  "Growth",
+  "Creativity",
+] as const;
+
+export type QuoteCategory = (typeof CATEGORIES)[number];
+
 /** Fisher-Yates shuffle; returns a new array. */
 export function shuffleQuotes<T>(items: readonly T[]): T[] {
   const out = [...items];
@@ -15,14 +26,44 @@ export function shuffleQuotes<T>(items: readonly T[]): T[] {
   return out;
 }
 
-export const CATEGORIES = [
-  "Wisdom",
-  "Love",
-  "Courage",
-  "Mindfulness",
-  "Growth",
-  "Creativity",
-] as const;
+/** Weighted sample without replacement. Unknown categories use weight 1. */
+export function shuffleByCategoryWeight(
+  quotes: readonly Quote[],
+  weights: Record<string, number>,
+): Quote[] {
+  const pool = [...quotes];
+  const out: Quote[] = [];
+  while (pool.length > 0) {
+    let total = 0;
+    const scores = pool.map((q) => {
+      const w = weights[q.category] ?? 1;
+      const score = Math.max(0.01, w);
+      total += score;
+      return score;
+    });
+    let pick = Math.random() * total;
+    let idx = scores.length - 1;
+    for (let i = 0; i < scores.length; i++) {
+      pick -= scores[i]!;
+      if (pick <= 0) {
+        idx = i;
+        break;
+      }
+    }
+    out.push(pool.splice(idx, 1)[0]!);
+  }
+  return out;
+}
+
+if (__DEV__) {
+  const demo: Quote[] = [
+    { id: "a", text: "a", author: "a", category: "Love" },
+    { id: "b", text: "b", author: "b", category: "Wisdom" },
+  ];
+  const ranked = shuffleByCategoryWeight(demo, { Love: 99, Wisdom: 0.01 });
+  console.assert(ranked.length === 2);
+  console.assert(new Set(ranked.map((q) => q.id)).size === 2);
+}
 
 // Curated from Wikiquote (en.wikiquote.org) — sourced lines, not quote-site sludge.
 export const QUOTES: Quote[] = [

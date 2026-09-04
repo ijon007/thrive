@@ -59,6 +59,12 @@
           "isAccessMediaLocationEnabled": false
         }
       ],
+      [
+        "expo-notifications",
+        {
+          enableBackgroundRemoteNotifications: false
+        }
+      ],
       "expo-sharing"
     ],
     "experiments": {

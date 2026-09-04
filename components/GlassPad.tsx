@@ -14,6 +14,7 @@ export function GlassPad({
   effect = "regular",
   animate = false,
   durationSec = 0.32,
+  tintColor,
 }: {
   scheme: "light" | "dark";
   radius: number;
@@ -23,6 +24,7 @@ export function GlassPad({
   effect?: "clear" | "regular" | "none";
   animate?: boolean;
   durationSec?: number;
+  tintColor?: string;
 }) {
   const t = colors[scheme];
   const fallback = !hasLiquidGlass && effect !== "none";
@@ -30,6 +32,7 @@ export function GlassPad({
     <GlassView
       isInteractive={interactive}
       colorScheme={scheme}
+      tintColor={tintColor}
       glassEffectStyle={
         hasLiquidGlass && animate
           ? { style: effect, animate: true, animationDuration: durationSec }
@@ -40,13 +43,13 @@ export function GlassPad({
         {
           borderRadius: radius,
           borderCurve: "continuous",
-          // ponytail: overflow hidden clips native Switch thumbs at rounded corners
           overflow: "visible",
           ...(fallback
             ? {
                 backgroundColor:
-                  scheme === "dark" ? "rgba(28,28,30,0.78)" : "rgba(255,255,255,0.78)",
-                borderWidth: StyleSheet.hairlineWidth,
+                  tintColor ??
+                  (scheme === "dark" ? "rgba(28,28,30,0.78)" : "rgba(255,255,255,0.78)"),
+                borderWidth: tintColor ? 0 : StyleSheet.hairlineWidth,
                 borderColor: t.border,
               }
             : {}),

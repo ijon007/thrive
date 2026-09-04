@@ -12,12 +12,14 @@ import { AnimatedScrollView, AnimatedView, hasLiquidGlass } from "@/components/s
 import { QuoteBackgroundPicker } from "@/components/QuoteBackgroundPicker";
 import { QUOTES } from "@/constants/quotes";
 import { colors, fonts } from "@/constants/theme";
+import { useOnboarding } from "@/contexts/OnboardingContext";
 import { useQuoteAppearance } from "@/contexts/QuoteAppearanceContext";
 import { useQuoteBackground } from "@/contexts/QuoteBackgroundContext";
 import { useSavedQuotes } from "@/contexts/SavedQuotesContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { NOTIF_ENABLED_KEY, syncQuoteNotifications } from "@/lib/quoteNotifications";
 
-const NOTIF_KEY = "quotes_notifications";
+const NOTIF_KEY = NOTIF_ENABLED_KEY;
 const CARD_R = 18;
 const SELECT_BLUE = "#007AFF";
 
@@ -29,6 +31,7 @@ export default function SettingsScreen() {
   const { appearance, patchAppearance } = useQuoteAppearance();
   const t = colors[scheme];
   const { savedIds } = useSavedQuotes();
+  const { answers } = useOnboarding();
   const [notifications, setNotifications] = useState(true);
 
   useEffect(() => {
@@ -41,6 +44,16 @@ export default function SettingsScreen() {
   const onNotifications = (value: boolean) => {
     setNotifications(value);
     AsyncStorage.setItem(NOTIF_KEY, value ? "1" : "0");
+    const often = value
+      ? answers.often === "open" || !answers.often
+        ? "daily"
+        : answers.often
+      : "open";
+    void syncQuoteNotifications({
+      enabled: value,
+      whenId: answers.when || "wake",
+      oftenId: often,
+    });
   };
 
   const selectedPreview: "light" | "dark" =

@@ -6,8 +6,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { QuoteCard } from "@/components/QuoteCard";
 import { AnimatedView } from "@/components/styled";
-import { QUOTES, shuffleQuotes } from "@/constants/quotes";
+import { QUOTES, shuffleByCategoryWeight, shuffleQuotes } from "@/constants/quotes";
 import { colors, fonts } from "@/constants/theme";
+import { useCategoryWeights } from "@/contexts/OnboardingContext";
 import { useTheme } from "@/contexts/ThemeContext";
 
 const GAP = 12;
@@ -18,7 +19,11 @@ export default function HomeScreen() {
   const { scheme } = useTheme();
   const t = colors[scheme];
 
-  const quotes = useMemo(() => shuffleQuotes(QUOTES), []);
+  const weights = useCategoryWeights();
+  const quotes = useMemo(
+    () => (weights ? shuffleByCategoryWeight(QUOTES, weights) : shuffleQuotes(QUOTES)),
+    [weights],
+  );
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [editingId, setEditingId] = useState<string | null>(null);

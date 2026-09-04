@@ -12,7 +12,9 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 import "../global.css";
 
+import OnboardingScreen from "./onboarding";
 import { colors, fonts } from "@/constants/theme";
+import { OnboardingProvider, useOnboarding } from "@/contexts/OnboardingContext";
 import { QuoteAppearanceProvider } from "@/contexts/QuoteAppearanceContext";
 import { QuoteBackgroundProvider } from "@/contexts/QuoteBackgroundContext";
 import { QuotePhotosProvider } from "@/contexts/QuotePhotosContext";
@@ -54,26 +56,38 @@ const DarkNavTheme = {
 
 function InnerLayout() {
   const { scheme } = useTheme();
+  const { ready, completed } = useOnboarding();
+
+  useEffect(() => {
+    if (ready) void SplashScreen.hideAsync();
+  }, [ready]);
+
+  if (!ready) return null;
 
   return (
     <NavThemeProvider value={scheme === "dark" ? DarkNavTheme : LightNavTheme}>
       <StatusBar style={scheme === "dark" ? "light" : "dark"} />
-      <Stack
-        screenOptions={{
-          headerStyle: { backgroundColor: colors[scheme].background },
-          headerTintColor: colors[scheme].foreground,
-          headerShadowVisible: false,
-          headerTitleStyle: {
-            fontFamily: fonts.sansBold,
-            color: colors[scheme].foreground,
-          },
-          contentStyle: { backgroundColor: colors[scheme].background },
-        }}
-      >
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="saved" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: "modal" }} />
-      </Stack>
+      {completed ? (
+        <Stack
+          screenOptions={{
+            headerStyle: { backgroundColor: colors[scheme].background },
+            headerTintColor: colors[scheme].foreground,
+            headerShadowVisible: false,
+            headerTitleStyle: {
+              fontFamily: fonts.sansBold,
+              color: colors[scheme].foreground,
+            },
+            contentStyle: { backgroundColor: colors[scheme].background },
+          }}
+        >
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+          <Stack.Screen name="saved" options={{ headerShown: false }} />
+          <Stack.Screen name="modal" options={{ presentation: "modal" }} />
+        </Stack>
+      ) : (
+        <OnboardingScreen />
+      )}
     </NavThemeProvider>
   );
 }
@@ -91,26 +105,24 @@ export default function RootLayout() {
     if (error) throw error;
   }, [error]);
 
-  useEffect(() => {
-    if (loaded) SplashScreen.hideAsync();
-  }, [loaded]);
-
   if (!loaded) return null;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider>
-        <SavedQuotesProvider>
-          <QuoteBackgroundProvider>
-            <QuoteAppearanceProvider>
-              <QuotePhotosProvider>
-                <QuoteStylesProvider>
-                  <InnerLayout />
-                </QuoteStylesProvider>
-              </QuotePhotosProvider>
-            </QuoteAppearanceProvider>
-          </QuoteBackgroundProvider>
-        </SavedQuotesProvider>
+        <OnboardingProvider>
+          <SavedQuotesProvider>
+            <QuoteBackgroundProvider>
+              <QuoteAppearanceProvider>
+                <QuotePhotosProvider>
+                  <QuoteStylesProvider>
+                    <InnerLayout />
+                  </QuoteStylesProvider>
+                </QuotePhotosProvider>
+              </QuoteAppearanceProvider>
+            </QuoteBackgroundProvider>
+          </SavedQuotesProvider>
+        </OnboardingProvider>
       </ThemeProvider>
     </GestureHandlerRootView>
   );
