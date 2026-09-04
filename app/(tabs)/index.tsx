@@ -1,12 +1,12 @@
 import { useMinimizeOnScroll } from "expo-glass-tabs";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Text, View, type ViewToken } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { QuoteCard } from "@/components/QuoteCard";
 import { AnimatedView } from "@/components/styled";
-import { QUOTES } from "@/constants/quotes";
+import { QUOTES, shuffleQuotes } from "@/constants/quotes";
 import { colors, fonts } from "@/constants/theme";
 import { useTheme } from "@/contexts/ThemeContext";
 
@@ -17,6 +17,8 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const { scheme } = useTheme();
   const t = colors[scheme];
+
+  const quotes = useMemo(() => shuffleQuotes(QUOTES), []);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -45,16 +47,6 @@ export default function HomeScreen() {
         >
           Thrive
         </Text>
-        <Text
-          className="text-[15px]"
-          style={{
-            color: t.mutedForeground,
-            fontFamily: fonts.sans,
-            marginTop: 2,
-          }}
-        >
-          Daily quotes · {currentIndex + 1} / {QUOTES.length}
-        </Text>
       </AnimatedView>
 
       <View className="flex-1" style={{ flex: 1, paddingBottom: insets.bottom }}>
@@ -66,7 +58,7 @@ export default function HomeScreen() {
           >
             {pageH > 0 && (
               <Animated.FlatList
-                data={QUOTES}
+                data={quotes}
                 extraData={editingId}
                 keyExtractor={(q) => q.id}
                 pagingEnabled

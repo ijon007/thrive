@@ -1,7 +1,7 @@
 import { fonts } from "@/constants/theme";
 import type { QuoteAppearance, QuoteAlign } from "@/constants/quoteAppearance";
 
-export const QUOTE_FONT_IDS = ["serif", "sans", "display"] as const;
+export const QUOTE_FONT_IDS = ["serif", "sans", "mono"] as const;
 export type QuoteFontId = (typeof QUOTE_FONT_IDS)[number];
 
 export const QUOTE_INK_IDS = ["auto", "light", "dark"] as const;
@@ -39,7 +39,7 @@ export const QUOTE_FONTS: {
 }[] = [
   { id: "serif", label: "Serif", family: fonts.serif },
   { id: "sans", label: "Sans", family: fonts.sans },
-  { id: "display", label: "Display", family: fonts.serifBold },
+  { id: "mono", label: "Mono", family: fonts.mono },
 ];
 
 export function clamp01(n: number): number {
@@ -71,8 +71,8 @@ export function fontFamilyFor(id: QuoteFontId): string {
       return fonts.serif;
     case "sans":
       return fonts.sans;
-    case "display":
-      return fonts.serifBold;
+    case "mono":
+      return fonts.mono;
     default: {
       const _never: never = id;
       void _never;
@@ -124,7 +124,7 @@ export function resolveStyle(
 }
 
 function isFontId(v: unknown): v is QuoteFontId {
-  return v === "serif" || v === "sans" || v === "display";
+  return v === "serif" || v === "sans" || v === "mono";
 }
 function isInk(v: unknown): v is QuoteInk {
   return v === "auto" || v === "light" || v === "dark";
@@ -137,7 +137,8 @@ export function parseQuoteStyle(v: unknown): QuoteStyle | undefined {
   if (typeof v !== "object" || v == null) return undefined;
   const o = v as Record<string, unknown>;
   const out: Partial<QuoteStyle> = {};
-  if (isFontId(o.fontId)) out.fontId = o.fontId;
+  if (o.fontId === "display" || o.fontId === "mono") out.fontId = "mono";
+  else if (isFontId(o.fontId)) out.fontId = o.fontId;
   if (typeof o.size === "number" && Number.isFinite(o.size)) out.size = clampSize(o.size);
   if (isAlign(o.align)) out.align = o.align;
   if (typeof o.ax === "number" && Number.isFinite(o.ax)) out.ax = clamp01(o.ax);

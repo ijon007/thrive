@@ -382,7 +382,7 @@ export function QuoteCard({
           fontFamily: family,
           fontSize: quoteSize,
           lineHeight: quoteLine,
-          letterSpacing: live.fontId === "display" ? -0.6 : -0.3,
+          letterSpacing: live.fontId === "mono" ? 0 : -0.3,
           textAlign: live.align,
           textShadowColor: lightText ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.25)",
           textShadowOffset: { width: 0, height: 1 },

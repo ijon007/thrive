@@ -361,7 +361,7 @@ function MiniQuotesPhone({
           marginBottom: 5,
         }}
       >
-        Daily quotes · 1 / {QUOTES.length}
+        Random quotes · 1 / {QUOTES.length}
       </Text>
       <View
         style={{
