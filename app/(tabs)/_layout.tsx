@@ -21,13 +21,13 @@ export default function TabLayout() {
         <NativeTabs.Trigger.Icon sf="quote.opening" md="format_quote" />
         <NativeTabs.Trigger.Label>Quotes</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="explore" disableAutomaticContentInsets>
-        <NativeTabs.Trigger.Icon sf="safari.fill" md="travel_explore" />
-        <NativeTabs.Trigger.Label>Explore</NativeTabs.Trigger.Label>
-      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="profile" disableAutomaticContentInsets>
         <NativeTabs.Trigger.Icon sf="gearshape.fill" md="settings" />
         <NativeTabs.Trigger.Label>Settings</NativeTabs.Trigger.Label>
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="explore" role="search" disableAutomaticContentInsets>
+        <NativeTabs.Trigger.Icon sf="magnifyingglass" md="search" />
+        <NativeTabs.Trigger.Label>Search</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
