@@ -167,7 +167,7 @@ export default function SettingsScreen() {
         }}
       >
         <MenuRow
-          label="Saved Quotes"
+          label="Liked Quotes"
           icon="heart.fill"
           scheme={scheme}
           badge={savedIds.size > 0 ? String(savedIds.size) : undefined}

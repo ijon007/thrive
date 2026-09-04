@@ -22,7 +22,7 @@ export default function SavedQuotesScreen() {
   const [openQuote, setOpenQuote] = useState<Quote | null>(null);
   const [openSource, setOpenSource] = useState<TileRect | null>(null);
 
-  const saved = QUOTES.filter((q) => savedIds.has(q.id));
+  const liked = QUOTES.filter((q) => savedIds.has(q.id));
 
   return (
     <>
@@ -50,11 +50,11 @@ export default function SavedQuotesScreen() {
             className="text-[32px] font-bold tracking-tight"
             style={{ color: t.foreground, fontFamily: fonts.serifBold }}
           >
-            Saved Quotes
+            Liked Quotes
           </Text>
         </AnimatedView>
 
-        {saved.length === 0 ? (
+        {liked.length === 0 ? (
           <Text
             style={{
               color: t.mutedForeground,
@@ -74,7 +74,7 @@ export default function SavedQuotesScreen() {
               marginTop: 2,
             }}
           >
-            {saved.map((quote) => (
+            {liked.map((quote) => (
               <QuoteTile
                 key={quote.id}
                 quote={quote}
