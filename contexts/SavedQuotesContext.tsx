@@ -9,8 +9,11 @@ import {
   type ReactNode,
 } from "react";
 
+import { QUOTES } from "@/constants/quotes";
+
 const STORAGE_KEY = "quotes_saved_ids";
 const ROLL_KEY = "quotes_saved_to_roll";
+const VALID_QUOTE_IDS = new Set(QUOTES.map((q) => q.id));
 
 interface SavedQuotesValue {
   savedIds: Set<string>;
@@ -39,6 +42,20 @@ function parseIdSet(raw: string | null): Set<string> | null {
   return null;
 }
 
+function pruneQuoteIds(ids: Set<string>): Set<string> {
+  const next = new Set<string>();
+  for (const id of ids) {
+    if (VALID_QUOTE_IDS.has(id)) next.add(id);
+  }
+  return next;
+}
+
+function persistIfChanged(key: string, prev: Set<string>, next: Set<string>) {
+  if (prev.size !== next.size || [...prev].some((id) => !next.has(id))) {
+    void AsyncStorage.setItem(key, JSON.stringify([...next]));
+  }
+}
+
 export function SavedQuotesProvider({ children }: { children: ReactNode }) {
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [rollIds, setRollIds] = useState<Set<string>>(new Set());
@@ -50,8 +67,16 @@ export function SavedQuotesProvider({ children }: { children: ReactNode }) {
     ]).then(([savedRaw, rollRaw]) => {
       const saved = parseIdSet(savedRaw);
       const rolled = parseIdSet(rollRaw);
-      if (saved) setSavedIds(saved);
-      if (rolled) setRollIds(rolled);
+      if (saved) {
+        const pruned = pruneQuoteIds(saved);
+        setSavedIds(pruned);
+        persistIfChanged(STORAGE_KEY, saved, pruned);
+      }
+      if (rolled) {
+        const pruned = pruneQuoteIds(rolled);
+        setRollIds(pruned);
+        persistIfChanged(ROLL_KEY, rolled, pruned);
+      }
     });
   }, []);
 
@@ -88,3 +113,10 @@ export function SavedQuotesProvider({ children }: { children: ReactNode }) {
 }
 
 export const useSavedQuotes = () => useContext(SavedQuotesContext);
+
+if (__DEV__) {
+  const stale = new Set(["1", "2", "3"]);
+  const kept = pruneQuoteIds(stale);
+  console.assert(kept.size === 0, "stale numeric quote ids should be pruned");
+  console.assert(pruneQuoteIds(new Set([QUOTES[0]!.id])).size === 1);
+}
