@@ -13,7 +13,10 @@ import "react-native-reanimated";
 import "../global.css";
 
 import { colors, fonts } from "@/constants/theme";
+import { QuoteAppearanceProvider } from "@/contexts/QuoteAppearanceContext";
 import { QuoteBackgroundProvider } from "@/contexts/QuoteBackgroundContext";
+import { QuotePhotosProvider } from "@/contexts/QuotePhotosContext";
+import { QuoteStylesProvider } from "@/contexts/QuoteStylesContext";
 import { SavedQuotesProvider } from "@/contexts/SavedQuotesContext";
 import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
 
@@ -99,7 +102,13 @@ export default function RootLayout() {
       <ThemeProvider>
         <SavedQuotesProvider>
           <QuoteBackgroundProvider>
-            <InnerLayout />
+            <QuoteAppearanceProvider>
+              <QuotePhotosProvider>
+                <QuoteStylesProvider>
+                  <InnerLayout />
+                </QuoteStylesProvider>
+              </QuotePhotosProvider>
+            </QuoteAppearanceProvider>
           </QuoteBackgroundProvider>
         </SavedQuotesProvider>
       </ThemeProvider>

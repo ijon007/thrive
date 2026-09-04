@@ -46,6 +46,12 @@
         }
       ],
       [
+        "expo-image-picker",
+        {
+          "photosPermission": "Thrive uses your photos as quote backgrounds."
+        }
+      ],
+      [
         "expo-media-library",
         {
           "photosPermission": "Thrive saves quote images to your photos.",

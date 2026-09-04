@@ -12,6 +12,7 @@ import { AnimatedScrollView, AnimatedView, hasLiquidGlass } from "@/components/s
 import { QuoteBackgroundPicker } from "@/components/QuoteBackgroundPicker";
 import { QUOTES } from "@/constants/quotes";
 import { colors, fonts } from "@/constants/theme";
+import { useQuoteAppearance } from "@/contexts/QuoteAppearanceContext";
 import { useQuoteBackground } from "@/contexts/QuoteBackgroundContext";
 import { useSavedQuotes } from "@/contexts/SavedQuotesContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -25,6 +26,7 @@ export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const { scheme, mode, setMode } = useTheme();
   const { backgroundId, setBackgroundId } = useQuoteBackground();
+  const { appearance, patchAppearance } = useQuoteAppearance();
   const t = colors[scheme];
   const { savedIds } = useSavedQuotes();
   const [notifications, setNotifications] = useState(true);
@@ -138,6 +140,77 @@ export default function SettingsScreen() {
           scheme={scheme}
           selectedId={backgroundId}
           onSelect={setBackgroundId}
+        />
+      </GlassView>
+
+      <Text
+        style={{
+          color: t.mutedForeground,
+          fontFamily: fonts.sans,
+          fontSize: 13,
+          marginTop: 6,
+          marginLeft: 4,
+        }}
+      >
+        Quote card
+      </Text>
+      <GlassView
+        colorScheme={scheme}
+        glassEffectStyle="regular"
+        {...{ borderRadius: CARD_R }}
+        style={{
+          borderRadius: CARD_R,
+          borderCurve: "continuous",
+          overflow: "hidden",
+          ...(hasLiquidGlass
+            ? {}
+            : { backgroundColor: t.card, borderWidth: 1, borderColor: t.border }),
+        }}
+      >
+        <MenuRow
+          label="Quotation mark"
+          icon="quote.opening"
+          scheme={scheme}
+          trailing={
+            <LgSwitch
+              value={appearance.showMark}
+              onValueChange={(v) => patchAppearance({ showMark: v })}
+            />
+          }
+        />
+        <MenuRow
+          label="Author"
+          icon="person.fill"
+          scheme={scheme}
+          trailing={
+            <LgSwitch
+              value={appearance.showAuthor}
+              onValueChange={(v) => patchAppearance({ showAuthor: v })}
+            />
+          }
+        />
+        <MenuRow
+          label="Category"
+          icon="tag.fill"
+          scheme={scheme}
+          trailing={
+            <LgSwitch
+              value={appearance.showCategory}
+              onValueChange={(v) => patchAppearance({ showCategory: v })}
+            />
+          }
+        />
+        <MenuRow
+          label="Center text"
+          icon="text.aligncenter"
+          scheme={scheme}
+          isLast
+          trailing={
+            <LgSwitch
+              value={appearance.align === "center"}
+              onValueChange={(v) => patchAppearance({ align: v ? "center" : "left" })}
+            />
+          }
         />
       </GlassView>
 

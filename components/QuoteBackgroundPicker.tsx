@@ -31,10 +31,9 @@ export function QuoteBackgroundPicker({
       horizontal
       nestedScrollEnabled
       showsHorizontalScrollIndicator={false}
-      decelerationRate="fast"
-      snapToInterval={TILE_W + TILE_GAP}
-      snapToAlignment="start"
-      disableIntervalMomentum
+      decelerationRate="normal"
+      bounces
+      alwaysBounceHorizontal
       contentContainerStyle={{
         paddingHorizontal: 16,
         paddingVertical: 18,
@@ -72,12 +71,11 @@ function BackgroundTile({
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => ({
+      style={{
         width: TILE_W,
         alignItems: "center",
         gap: 8,
-        transform: [{ scale: pressed ? 0.97 : 1 }],
-      })}
+      }}
     >
       <View
         style={{
@@ -99,7 +97,10 @@ function BackgroundTile({
           />
         ) : (
           <View
-            style={[StyleSheet.absoluteFill, { backgroundColor: t.background }]}
+            style={[
+              StyleSheet.absoluteFill,
+              { backgroundColor: background.fill ?? t.background },
+            ]}
           />
         )}
         {selected ? (
