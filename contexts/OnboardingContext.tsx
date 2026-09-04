@@ -47,7 +47,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   const [plan, setPlan] = useState<OnboardingPlan>("skip");
 
   useEffect(() => {
-    void AsyncStorage.getItem(ONBOARDING_STORAGE_KEY).then((raw) => {
+    void AsyncStorage.getItem(ONBOARDING_STORAGE_KEY).then(async (raw) => {
       const rec = parseOnboardingRecord(raw);
       if (rec) {
         setCompleted(true);
@@ -55,6 +55,18 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         setPlan(rec.plan);
       }
       setReady(true);
+      if (rec) {
+        const flag = await AsyncStorage.getItem(NOTIF_ENABLED_KEY);
+        try {
+          await syncQuoteNotifications({
+            enabled: flag !== "0",
+            whenId: rec.answers.when,
+            oftenId: rec.answers.often,
+          });
+        } catch {
+          // ponytail: launch must not hang on notification permission
+        }
+      }
     });
   }, []);
 

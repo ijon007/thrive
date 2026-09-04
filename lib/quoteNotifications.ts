@@ -2,6 +2,7 @@ import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 
 import { notifHour, wantsNotifications } from "@/constants/onboarding";
+import { QUOTES } from "@/constants/quotes";
 
 export const NOTIF_ENABLED_KEY = "quotes_notifications";
 
@@ -57,6 +58,21 @@ function weekdayTriggers(hour: number, often: string): Notifications.Schedulable
   ];
 }
 
+function randomQuoteContent(): Notifications.NotificationContentInput {
+  const q = QUOTES[Math.floor(Math.random() * QUOTES.length)]!;
+  return {
+    title: "Thrive",
+    subtitle: q.author,
+    body: q.text,
+    data: { quoteId: q.id },
+  };
+}
+
+if (__DEV__) {
+  const sample = randomQuoteContent();
+  console.assert(typeof sample.body === "string" && QUOTES.some((q) => q.text === sample.body));
+}
+
 export async function syncQuoteNotifications(opts: {
   enabled: boolean;
   whenId: string;
@@ -67,12 +83,11 @@ export async function syncQuoteNotifications(opts: {
   const ok = await ensurePermission();
   if (!ok) return false;
   const hour = notifHour(opts.whenId);
-  const content = {
-    title: "Thrive",
-    body: "A line for today is waiting.",
-  };
   for (const trigger of weekdayTriggers(hour, opts.oftenId)) {
-    await Notifications.scheduleNotificationAsync({ content, trigger });
+    await Notifications.scheduleNotificationAsync({
+      content: randomQuoteContent(),
+      trigger,
+    });
   }
   return true;
 }
