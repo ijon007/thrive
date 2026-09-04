@@ -13,6 +13,7 @@ import "react-native-reanimated";
 import "../global.css";
 
 import { colors, fonts } from "@/constants/theme";
+import { QuoteBackgroundProvider } from "@/contexts/QuoteBackgroundContext";
 import { SavedQuotesProvider } from "@/contexts/SavedQuotesContext";
 import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
 
@@ -97,7 +98,9 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider>
         <SavedQuotesProvider>
-          <InnerLayout />
+          <QuoteBackgroundProvider>
+            <InnerLayout />
+          </QuoteBackgroundProvider>
         </SavedQuotesProvider>
       </ThemeProvider>
     </GestureHandlerRootView>

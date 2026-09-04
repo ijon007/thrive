@@ -10,8 +10,10 @@ import { FadeIn } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AnimatedScrollView, AnimatedView, hasLiquidGlass } from "@/components/styled";
+import { QuoteBackgroundPicker } from "@/components/QuoteBackgroundPicker";
 import { QUOTES } from "@/constants/quotes";
 import { colors, fonts } from "@/constants/theme";
+import { useQuoteBackground } from "@/contexts/QuoteBackgroundContext";
 import { useSavedQuotes } from "@/contexts/SavedQuotesContext";
 import { useTheme } from "@/contexts/ThemeContext";
 
@@ -23,6 +25,7 @@ export default function SettingsScreen() {
   const onScroll = useMinimizeOnScroll();
   const insets = useSafeAreaInsets();
   const { scheme, mode, setMode } = useTheme();
+  const { backgroundId, setBackgroundId } = useQuoteBackground();
   const t = colors[scheme];
   const { savedIds } = useSavedQuotes();
   const [notifications, setNotifications] = useState(true);
@@ -52,7 +55,7 @@ export default function SettingsScreen() {
         paddingHorizontal: 16,
         gap: 10,
         paddingTop: insets.top + 8,
-        paddingBottom: 32,
+        paddingBottom: insets.bottom + 8,
       }}
       style={{ backgroundColor: t.background }}
     >
@@ -109,6 +112,17 @@ export default function SettingsScreen() {
         </View>
       </GlassView>
 
+      <Text
+        style={{
+          color: t.mutedForeground,
+          fontFamily: fonts.sans,
+          fontSize: 13,
+          marginTop: 6,
+          marginLeft: 4,
+        }}
+      >
+        Quote background
+      </Text>
       <GlassView
         colorScheme={scheme}
         glassEffectStyle="regular"
@@ -121,34 +135,11 @@ export default function SettingsScreen() {
             : { backgroundColor: t.card, borderWidth: 1, borderColor: t.border }),
         }}
       >
-        <View style={{ padding: 20, gap: 8 }}>
-          <SymbolView
-            name="quote.opening"
-            size={16}
-            tintColor={t.mutedForeground}
-            style={{ opacity: 0.5 }}
-          />
-          <Text
-            style={{
-              color: t.foreground,
-              fontFamily: fonts.serif,
-              fontSize: 19,
-              lineHeight: 25,
-              letterSpacing: -0.35,
-            }}
-          >
-            The details are not the details. They make the design.
-          </Text>
-          <Text
-            style={{
-              color: t.mutedForeground,
-              fontFamily: fonts.sans,
-              fontSize: 12,
-            }}
-          >
-            — Charles Eames
-          </Text>
-        </View>
+        <QuoteBackgroundPicker
+          scheme={scheme}
+          selectedId={backgroundId}
+          onSelect={setBackgroundId}
+        />
       </GlassView>
 
       <Text
@@ -209,28 +200,6 @@ export default function SettingsScreen() {
           onPress={() => {}}
         />
       </GlassView>
-
-      <View style={{ alignItems: "center", gap: 2, marginTop: 8 }}>
-        <Text
-          style={{
-            color: t.mutedForeground,
-            fontFamily: fonts.sans,
-            fontSize: 12,
-          }}
-        >
-          Thrive v1.0.0
-        </Text>
-        <Text
-          style={{
-            color: t.mutedForeground,
-            fontFamily: fonts.sans,
-            fontSize: 12,
-            opacity: 0.5,
-          }}
-        >
-          Made with ♥
-        </Text>
-      </View>
     </AnimatedScrollView>
   );
 }
@@ -292,15 +261,15 @@ function MiniQuotesPhone({
       style={{
         width: 92,
         height: 168,
-        borderRadius: 22,
+        borderRadius: 12,
         borderCurve: "continuous",
         backgroundColor: t.background,
         borderWidth: 1.5,
         borderColor: preview === "dark" ? "#3A3A3C" : "#C7C7CC",
         overflow: "hidden",
-        paddingHorizontal: 6,
+        paddingHorizontal: 4,
         paddingTop: 8,
-        paddingBottom: 6,
+        paddingBottom: 8,
       }}
     >
       <Text
