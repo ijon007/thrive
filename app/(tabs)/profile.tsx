@@ -476,6 +476,7 @@ function MenuRow({
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
+          minHeight: 51,
           paddingVertical: 10,
           paddingHorizontal: 16,
           ...(!isLast
